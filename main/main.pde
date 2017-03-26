@@ -222,6 +222,12 @@ void draw(){
   fill(80,80,180);
   rect(changeEnvironmentBtnX, changeEnvironmentBtnY, changeEnvironmentBtnWidth, changeEnvironmentBtnHeight);
   
+  textSize(15);
+  fill(255);
+  text("Next Gen.", 20, 230);
+  text("Env.", 140, 230);
+
+  
   if (overRect(nextGenBtnX, nextGenBtnY, nextGenBtnWidth, nextGenBtnHeight) ) {
     overNextGenBtn = true;
   } else {
