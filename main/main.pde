@@ -14,12 +14,12 @@ void setup(){
   
   nextGenBtnX = 10;
   nextGenBtnY = 210;
-  nextGenBtnWidth = 80;
+  nextGenBtnWidth = 90;
   nextGenBtnHeight = 30;
   
-  changeEnvironmentBtnX = 100;
+  changeEnvironmentBtnX = 110;
   changeEnvironmentBtnY = 210;
-  changeEnvironmentBtnWidth = 80;
+  changeEnvironmentBtnWidth = 90;
   changeEnvironmentBtnHeight = 30;
   
   backgroundColour = 255;
@@ -144,7 +144,7 @@ void reproduce(){
     
     int mutatedColour = -1;
     
-    int mutationAllowance = 20;
+    int mutationAllowance = 30;
     
     while(mutatedColour < 0 || mutatedColour > 255){
       mutatedColour = int(random(darkest - mutationAllowance, brightest + mutationAllowance));
