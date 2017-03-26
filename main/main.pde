@@ -3,54 +3,48 @@ Cat[] cats;
 int backgroundColour;
 int generationSize;
 
-int buttonX, buttonY, buttonWidth, buttonHeight;
+int nextGenBtnX, nextGenBtnY, nextGenBtnWidth, nextGenBtnHeight;
+int changeEnvironmentBtnX, changeEnvironmentBtnY, changeEnvironmentBtnWidth, changeEnvironmentBtnHeight;
 
-boolean rectOver, toggleView;
+boolean overNextGenBtn, overChangeEnvironmentBtn, toggleView;
 
 void setup(){
   
   size(210,250);
   
-  buttonX = 10;
-  buttonY = 210;
-  buttonWidth = 190;
-  buttonHeight = 30;
+  nextGenBtnX = 10;
+  nextGenBtnY = 210;
+  nextGenBtnWidth = 80;
+  nextGenBtnHeight = 30;
   
-  backgroundColour = 200;
-  generationSize = 100;
+  changeEnvironmentBtnX = 100;
+  changeEnvironmentBtnY = 210;
+  changeEnvironmentBtnWidth = 80;
+  changeEnvironmentBtnHeight = 30;
+  
+  backgroundColour = 255;
+  generationSize = 100; // Must be even
   
   cats = new Cat[generationSize];
-  
-  //Next button
-  //display();
-  
+
   generateInitialSample();
- 
-  //Next button
-  display(false);
   
+  nextCycle();
+  
+}
+
+void nextCycle(){
+  
+  //Step 1
   calculateFit();
   
-  //Next button
-  display(false);
-  
-  
+  //Step 2
   cull();
 
-  //Next button
-  display(false);
+  display();
   
-  for (int i = 0; i < generationSize; i++){
-    
-    String killString = "";
-    
-    if(cats[i].killed){
-      killString = "Kitty be gone";
-    }
-   
-      println(cats[i].getVariation() + " " + killString);
-      
-  }
+  //Step 3
+  reproduce();
   
 }
 
@@ -66,8 +60,8 @@ void generateInitialSample(){
 
 void calculateFit(){
   for (int i = 0; i < generationSize; i++){
-   
-      cats[i].calcVariation(backgroundColour);
+
+    cats[i].calcVariation(backgroundColour);
     
   } 
 }
@@ -75,13 +69,13 @@ void calculateFit(){
 
 void cull(){
  
-  Cat[] shuffled = shuffle(cats);
+  cats = shuffle(cats);
   int killCount = 0;
   int i = 0;
   
   //Calculate the maximum possible variation that any cat has
   int maxVariation = 0;
-  for (Cat c : shuffled) {
+  for (Cat c : cats) {
     if(c.getVariation() > maxVariation){
       maxVariation = c.getVariation();
     }
@@ -95,13 +89,13 @@ void cull(){
     }
     
     //As we may have to loop back through the list of cats we need to make sure we haven't already killed the curretn cat.
-    if(!shuffled[i].killed){
+    if(!cats[i].killed){
       
       //Monte Carlo random - Lower score valued cats have a higher chance of being killed
-      float score = map(cats[i].getVariation(), 0, maxVariation, 0.0, 1.0);
+      float score = map(cats[i].getVariation(), 0, maxVariation, 1.0, 0.0);
       float qualifyingRandom = random(1);
       if(qualifyingRandom > score){
-        shuffled[i].kill();
+        cats[i].kill();
         killCount++;
       }
     }
@@ -109,6 +103,63 @@ void cull(){
     i++;
   }
 
+}
+
+void reproduce(){
+  
+  //Put survivors in to a new array (mating pool)
+  Cat[] survivors = new Cat[generationSize / 2];
+  
+  int i = 0;
+  
+  for (Cat c : cats){
+    if(!c.getKilled()){
+       survivors[i] = c;
+       i++;
+    }
+  }
+  
+  Cat[] nextGeneration = new Cat[generationSize];
+  
+  int offspringCounter = 0;
+  
+  for (int j = 0; j < generationSize; j++){
+    
+    //Pick two random maters
+    Cat mateA = survivors[int(random(survivors.length))];
+    Cat mateB = survivors[int(random(survivors.length))];
+    
+    //Get the offspring's colour
+    //int mutatedColour = (mateA.getColour() + mateB.getColour()) / 2; //Find the mean
+    
+    int brightest, darkest;
+    
+    if(mateA.getColour() >= mateB.getColour()){
+      brightest = mateA.getColour();
+      darkest = mateB.getColour();
+    } else {
+      brightest = mateB.getColour();
+      darkest = mateA.getColour();
+    }
+    
+    int mutatedColour = -1;
+    
+    int mutationAllowance = 20;
+    
+    while(mutatedColour < 0 || mutatedColour > 255){
+      mutatedColour = int(random(darkest - mutationAllowance, brightest + mutationAllowance));
+    }
+    
+    //Add it to the next generation of cats
+    nextGeneration[offspringCounter] = new Cat(mutatedColour);
+    
+    offspringCounter++;
+   
+  }
+  
+  //Update the main cats array with the new generation
+  cats = nextGeneration;
+  
 }
 
 Cat[] shuffle(Cat[] cats){
@@ -132,7 +183,7 @@ Cat[] shuffle(Cat[] cats){
 }
 
 
-void display(boolean toggleKilled){
+void display(){
  
   background(backgroundColour);
   
@@ -149,13 +200,9 @@ void display(boolean toggleKilled){
       
       int x = i % gridWidth;
       int y = i / gridHeight;
-     
-      if(toggleKilled && !toggleView && cats[i].getKilled()){
-          fill(230,20,20);
-      } else {
-        fill(cats[i].getColour());      
-      }
 
+      fill(cats[i].getColour());
+      
       rect(x * width * separation + initialOffset, y * height * separation + initialOffset, width, height);
     
     }
@@ -170,12 +217,21 @@ void display(boolean toggleKilled){
 void draw(){
   
   fill(80,180,80);
-  rect(buttonX, buttonY, buttonWidth, buttonHeight);
+  rect(nextGenBtnX, nextGenBtnY, nextGenBtnWidth, nextGenBtnHeight);
   
-  if (overRect(buttonX, buttonY, buttonWidth, buttonHeight) ) {
-    rectOver = true;
+  fill(80,80,180);
+  rect(changeEnvironmentBtnX, changeEnvironmentBtnY, changeEnvironmentBtnWidth, changeEnvironmentBtnHeight);
+  
+  if (overRect(nextGenBtnX, nextGenBtnY, nextGenBtnWidth, nextGenBtnHeight) ) {
+    overNextGenBtn = true;
   } else {
-    rectOver = false; 
+    overNextGenBtn = false; 
+  }
+  
+  if (overRect(changeEnvironmentBtnX, changeEnvironmentBtnY, changeEnvironmentBtnWidth, changeEnvironmentBtnHeight) ) {
+    overChangeEnvironmentBtn = true;
+  } else {
+    overChangeEnvironmentBtn = false; 
   }
   
 }
@@ -189,7 +245,20 @@ boolean overRect(int x, int y, int width, int height)  {
 }
 
 void mousePressed() {
-  if (rectOver) {
-    display(true);
+  if (overNextGenBtn) {
+    nextCycle();
+  }
+  
+  if (overChangeEnvironmentBtn) {
+    changeEnvironment();
+    nextCycle();
+  }
+}
+
+void changeEnvironment(){
+  if(backgroundColour == 255){
+    backgroundColour = 0;
+  } else {
+    backgroundColour = 255;
   }
 }
